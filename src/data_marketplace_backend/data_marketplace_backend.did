@@ -2,6 +2,7 @@ type MyRequest = record {
     dataset_id: nat64;
     title: text;
     status: RequestStatus;
+    payment_memo: opt text; // <--- NEW FIELD
 };
 type RequestStatus = variant { Pending; Approved };
 
@@ -23,11 +24,11 @@ service : {
             principal; // owner
         }
     ) query;
-    request_access: (nat64) -> (text);
-    get_pending_requests: (nat64) -> (vec principal) query;
+    request_access: (nat64, text) -> (text); // <--- MODIFIED: Added 'text' for payment_memo
+    get_pending_requests: (nat64) -> (vec record { principal; text; }) query; // <--- MODIFIED: Returns record {principal; text;}
     approve_buyer: (nat64, principal) -> (text);
     view_dataset: (nat64) -> (variant { Ok: vec nat8; Err: text }) query;
     greet: (text) -> (text) query;
-    has_access: (nat64) -> (bool) query; // New function
-    get_my_requests: () -> (vec MyRequest) query; // New function
+    has_access: (nat64) -> (bool) query;
+    get_my_requests: () -> (vec MyRequest) query;
 };

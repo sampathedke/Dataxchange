@@ -66,7 +66,7 @@ export default function LandingPage() {
         <div className="steps-grid">
           <div className="step-card">
             <h3>1. Upload</h3>
-            <p>Dataset providers upload data with description, license, and price.</p>
+            <p>Dataset providers upload data with title,category, and price.</p>
           </div>
           <div className="step-card">
             <h3>2. Mint Canister</h3>

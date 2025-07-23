@@ -95,7 +95,7 @@ body.dark-mode .explore-search:focus {
 body.dark-mode .explore-grid {
   background-color: #1e293b;
   color: #e0e7ff;
-  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+  /* box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3); */
 }
 
 .explore-loading,

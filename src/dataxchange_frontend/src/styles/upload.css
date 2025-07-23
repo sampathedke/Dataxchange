@@ -10,6 +10,7 @@
   flex-direction: column;
   gap: 1.5rem;
   box-sizing: border-box;
+  border-left: 4px solid #00e0c6;
   width: 90%;
 }
 

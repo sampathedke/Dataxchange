@@ -1,7 +1,9 @@
 // src/pages/ExplorePage.jsx
+
 import React, { useEffect, useState } from 'react';
 import { getAllDatasets } from '../services/api';
 import DatasetCard from '../components/DatasetCard';
+import { shortenPrincipal } from '../utils/principal'; // Import shortenPrincipal
 import '../styles/explore.css';
 
 export default function ExplorePage() {
@@ -17,13 +19,14 @@ export default function ExplorePage() {
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Error fetching datasets:", err);
+        console.error("ExplorePage: Error fetching datasets:", err);
         setError("❌ Failed to load datasets.");
         setLoading(false);
       });
   }, []);
 
   const filtered = datasets.filter(ds =>
+    // Search by title or by the full owner principal (as a string)
     ds.title.toLowerCase().includes(search.toLowerCase()) ||
     ds.owner.toLowerCase().includes(search.toLowerCase())
   );
@@ -51,9 +54,15 @@ export default function ExplorePage() {
               key={ds.id}
               id={ds.id}
               title={ds.title}
-              description={`Category: ${ds.category}`}
+              // FIX: Pass 'category' prop if DatasetCard expects it,
+              // or keep 'description' if that's how you want to use it.
+              // Assuming DatasetCard was updated to accept 'category'.
+              category={ds.category}
+              // If DatasetCard still expects 'description', you can do:
+              // description={`Category: ${ds.category}`}
               price={ds.price}
-              owner={ds.owner.slice(0, 10) + "..."}
+              // FIX: Use the imported shortenPrincipal utility
+              owner={shortenPrincipal(ds.owner)}
             />
           ))
         ) : (

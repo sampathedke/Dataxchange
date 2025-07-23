@@ -1,7 +1,9 @@
+// lib.rs (Updated to include payment_memo within your structure)
+
 use ic_cdk::api::caller;
 use ic_cdk_macros::*;
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet}; // Import HashMap
 use candid::{CandidType, Principal};
 use serde::Deserialize;
 
@@ -15,7 +17,8 @@ struct Dataset {
     owner: Principal,
     wallet_address: String,
     approved_buyers: HashSet<Principal>,
-    pending_requests: HashSet<Principal>,
+    // Changed to HashMap to store payment memo with the principal
+    pending_requests: HashMap<Principal, String>, // Principal -> payment_memo
 }
 
 // New enum for request status
@@ -25,12 +28,13 @@ enum RequestStatus {
     Approved,
 }
 
-// New struct for a user's request
+// New struct for a user's request (updated to potentially include memo for pending)
 #[derive(CandidType, Deserialize, Clone)]
 struct MyRequest {
     dataset_id: u64,
     title: String,
     status: RequestStatus,
+    payment_memo: Option<String>, // Add optional payment memo for pending requests
 }
 
 thread_local! {
@@ -66,7 +70,7 @@ fn upload_dataset(
         owner: caller(),
         wallet_address: wallet,
         approved_buyers: HashSet::new(),
-        pending_requests: HashSet::new(),
+        pending_requests: HashMap::new(), // Initialize as HashMap
     };
 
     DATASETS.with(|d| {
@@ -94,7 +98,8 @@ fn get_all_datasets() -> Vec<(u64, String, String, u64, String, Principal)> {
 }
 
 #[update]
-fn request_access(dataset_id: u64) -> String {
+// Modified to accept payment_memo
+fn request_access(dataset_id: u64, payment_memo: String) -> String {
     let user = caller();
     DATASETS.with(|d| {
         let mut datasets = d.borrow_mut();
@@ -105,7 +110,8 @@ fn request_access(dataset_id: u64) -> String {
             if ds.approved_buyers.contains(&user) {
                 return "You already have access.".to_string();
             }
-            ds.pending_requests.insert(user);
+            // Insert the requester and their payment memo into the HashMap
+            ds.pending_requests.insert(user, payment_memo);
             return "Access request submitted. Awaiting seller approval.".to_string();
         }
         "Dataset not found.".to_string()
@@ -113,12 +119,14 @@ fn request_access(dataset_id: u64) -> String {
 }
 
 #[query]
-fn get_pending_requests(dataset_id: u64) -> Vec<Principal> {
+// Modified to return Principal and the associated payment memo
+fn get_pending_requests(dataset_id: u64) -> Vec<(Principal, String)> {
     let owner = caller();
     DATASETS.with(|d| {
         let datasets = d.borrow();
         if let Some(ds) = datasets.iter().find(|ds| ds.id == dataset_id && ds.owner == owner) {
-            return ds.pending_requests.iter().cloned().collect();
+            // Collect principal and memo pairs from the HashMap
+            return ds.pending_requests.iter().map(|(p, m)| (*p, m.clone())).collect();
         }
         vec![]
     })
@@ -130,7 +138,8 @@ fn approve_buyer(dataset_id: u64, buyer: Principal) -> String {
     DATASETS.with(|d| {
         let mut datasets = d.borrow_mut();
         if let Some(ds) = datasets.iter_mut().find(|ds| ds.id == dataset_id && ds.owner == owner) {
-            if ds.pending_requests.remove(&buyer) {
+            // Remove from HashMap. The returned value (memo) is not used here.
+            if ds.pending_requests.remove(&buyer).is_some() {
                 ds.approved_buyers.insert(buyer);
                 return "Buyer approved.".to_string();
             } else {
@@ -175,7 +184,7 @@ fn has_access(dataset_id: u64) -> bool {
     })
 }
 
-// New function to get a user's requests
+// New function to get a user's requests (updated to include payment_memo for pending)
 #[query]
 fn get_my_requests() -> Vec<MyRequest> {
     let user = caller();
@@ -189,12 +198,15 @@ fn get_my_requests() -> Vec<MyRequest> {
                         dataset_id: dataset.id,
                         title: dataset.title.clone(),
                         status: RequestStatus::Approved,
+                        payment_memo: None, // Approved requests don't need memo
                     })
-                } else if dataset.pending_requests.contains(&user) {
+                } else if dataset.pending_requests.contains_key(&user) { // Check if user is in pending_requests HashMap
                     Some(MyRequest {
                         dataset_id: dataset.id,
                         title: dataset.title.clone(),
                         status: RequestStatus::Pending,
+                        // Retrieve the memo from the HashMap
+                        payment_memo: dataset.pending_requests.get(&user).cloned(),
                     })
                 } else {
                     None
@@ -204,8 +216,20 @@ fn get_my_requests() -> Vec<MyRequest> {
     })
 }
 
-
 #[init]
 fn init() {
     ic_cdk::println!("Canister initialized");
+}
+
+// Required for Candid export
+#[cfg(not(target_arch = "wasm32"))]
+candid::export_service!();
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn generate_candid() {
+    // This is a placeholder test. You'd typically run `dfx generate`
+    // or `cargo build --target wasm32-unknown-unknown --release --features candid`
+    // to generate the .did file.
+    // print!("{}", __export_service());
 }

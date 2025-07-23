@@ -31,7 +31,7 @@ const [dark, setDark] = useState(false);
     <nav className="navbar">
       <div className="navbar__logo" onClick={() => navigate("/")}>
         <div className="navbar__logo-circle">
-        <img src="/public/logo.svg" alt="Logo" className="navbar__img" />
+        <img src="/public/x_logo.svg" alt="Logo" className="navbar__img" />
         </div>
         <span>DataXchange</span>
       </div>

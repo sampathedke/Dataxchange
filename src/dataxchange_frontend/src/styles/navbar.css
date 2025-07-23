@@ -26,7 +26,7 @@
   font-weight: 900;
   cursor: pointer;
   user-select: none;
-  color: #d0d7ff;
+  /* color: #d0d7ff; */
   letter-spacing: 0.02em;
   transition: color 0.3s ease;
   flex-shrink: 0;
@@ -39,7 +39,7 @@
 
 /* Logo Circular Icon */
 .navbar__logo-circle {
-  background: linear-gradient(135deg, #7f76bbe3 0%, #2cf05b 100%);
+  /* background: linear-gradient(135deg, #615a8ee3 0%, #bbdfe1 100%); */
   border-radius: 50%;
   padding: 8px;
   display: flex;
@@ -289,7 +289,7 @@ body.dark-mode .navbar__logo:focus-visible {
 }
 
 body.dark-mode .navbar__logo-circle {
-  background: linear-gradient(135deg, #7f76bbe3 0%, #2cf05b 100%);
+  /* background: linear-gradient(135deg, #7f76bbe3 0%, #2cf05b 100%); */
   box-shadow:
     0 8px 20px rgba(150, 140, 255, 0.7),
     inset 0 0 12px rgba(200, 195, 255, 0.8);
